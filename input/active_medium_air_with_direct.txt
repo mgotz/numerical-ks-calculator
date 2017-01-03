@@ -1,0 +1,52 @@
+; INI style File
+;
+; comment line staring with ; are ignored
+; any ammount of blanc lines can be added
+;
+; every properties has a section (in [])
+; in each section a function is defined (contant, line, exp, ploly4, poly5 or spline)
+; for a spline a file_name pointing to the location of a file containing the parameters of the spline should be given
+; the other function are defined by parameters: param0, param1 etc.
+;
+; expontential-function: [0]+[1]*exp([2]*x)
+; polynom 4. order: [0]+[1]*x+[2]*x*x..., expects 5 parameters ([0] [1] [2]...)
+; polynom 5. order: [0]+[1]*x+[2]*x*x..., expects 6 parameters ([0] [1] [2]...)
+; spline: The spline file contains 2 header lines and a body of 4 columns of tab-seperated values
+;	the tab seperated values are the coefficients of third order polynomials, each for a specific interval of electic field values
+;	the first header line: Number_of_splines: 18 Min_X_Spacing: 50
+;	informs about the number of lines in the table and the largest common denominator of the intervals 
+;	the second line: Knots: 50	200	400	etc.
+;	informs about the E-field intervals. It is a tab seperated list of values.
+;	the first polynomials is used for the interval 50-200, the second for 200-400 etc.
+;	see the given files for an example.
+;
+; order within one section and of the sections is irrelevant
+
+
+[volume_recombination]
+function = constant
+param0 = 1.29764892e-12
+;in m^3/s 1.24431194e-12
+
+[positive_ion_mobility]
+function = constant
+param0 = 1.87e-04 
+;in m^2/Vs
+
+[negative_ion_mobility]
+function = constant
+param0 = 2.09e-04
+;in m^2/Vs
+
+[electron_mobility]
+function = spline
+file_name = ../input/magBoltz_30humidAir_electron_mobility_spline.txt
+
+[electron_attachment_rate]
+function = spline
+file_name = ../input/reaction_rate_hoch_boiss_spline_extrapolated.txt
+
+[direct_recombination]
+function = constant
+param0 =  4.45446331e-12
+;in m^3/Vs from fit to N2 data
