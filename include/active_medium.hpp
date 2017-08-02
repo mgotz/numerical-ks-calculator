@@ -1,8 +1,9 @@
 ﻿#ifndef ACTIVE_MEDIUM
 #define ACTIVE_MEDIUM
 /*
- this class defines an active medium, with several methods to return its properties, such as ion mobility or electron attachment depending on the electri field strength
- it is constructed by reading an ini-style file with boost::property_tree
+ * This class defines an active medium, with several methods to return its properties,
+ * such as ion mobility or electron attachment, depending on the electric field strength.
+ * It is constructed by reading an ini-style file with boost::property_tree
 */
 
 

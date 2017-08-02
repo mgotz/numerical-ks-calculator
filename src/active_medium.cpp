@@ -33,12 +33,10 @@ active_medium::active_medium(std::string pMediumFile)
     names[3] = "electron_attachment_rate";
     names[4] = "electron_mobility";
     names[5] = "direct_recombination";
-    //only iterating up to 6 currently
-//    names[6] = "relative_permittivity";
-//    names[7] = "3-ion_recombination";
+    //only iterating up to 6 currently, additional ones could be defined here
 
-    //define additional optional paramters (so far only simple constants)
-    //their default values are defined in the second vector (super inelegant, but everything else is so complicated)
+    //define additional, optional parameters (so far only simple constants)
+    //their default values are defined in a the second vector (super inelegant, but everything else is so complicated)
     vector<string> optionalNames(numberOfOptional);
     optionalNames[0] = "relative_permittivity";
 

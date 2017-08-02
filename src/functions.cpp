@@ -35,11 +35,13 @@ variable_package parse_cmd_parameters(int argc,char **argv,ofstream &pLogFile, s
             ("number-of-pulses,N",po::value<int>(),"number of pulses in the pulse train")
             ("micro-pulsed,P",po::bool_switch()->default_value(false),"set switch to use a micro pulse structure like on ELBE")
             ("voltage,U",po::value<double>(),"chamber voltage in V")
+            ("polarity,p",po::value<int>(),"polarity of the voltage, irrelevant for plane-parallel, in cylinder +1 is negative charges move inwards, -1 the opposite. Sign of voltage may also be used to specificy polarity")
             ("chamber-file",po::value<string>(),"file giving chamber specifications")
             ("active-medium",po::value<string>(),"file specifying the active medium")
             ("rate-limit,r",po::value<double>(),"maximum reaction in one timestep")
-            ("speed-limit,v",po::value<double>(),"maximum movement in bins per timestep")
-            ("number-of-bins,n",po::value<int>(),"number of bins for spatial discretization")
+            ("speed-limit,v",po::value<double>(),"maximum movement in bins per timestep <0.5")
+            ("number-of-bins,n",po::value<unsigned int>(),"number of bins for spatial discretization (default 1000)")
+            ("margin,m",po::value<unsigned int>(),"number of bins to use as the collection margin (default 1)")
             ("log-file",po::value<string>(),"file for non critical output, defaults to cou")
             ("summary-file",po::value<string>(),"file to write a condensed result to, optional")
             ("summary-variable",po::value<char>(),"independent variable for the summary output, optional")
@@ -59,6 +61,7 @@ variable_package parse_cmd_parameters(int argc,char **argv,ofstream &pLogFile, s
     posOptions.add("summary-variable",1);
     posOptions.add("settings-log",1);
     posOptions.add("speed-limit",1);
+
 
     po::options_description cmdOptions;
     cmdOptions.add(cmdOnly).add(config);
@@ -119,11 +122,34 @@ variable_package parse_cmd_parameters(int argc,char **argv,ofstream &pLogFile, s
 
     if (vm.count("voltage"))
     {
-        user_input.voltage=vm["voltage"].as<double>();
+        //ensure that voltage is positive and assign a provisional value to polarity depending on the sign of the voltage
+        if (vm["voltage"].as<double>() < 0)
+        {
+            user_input.voltage=-1*vm["voltage"].as<double>();
+            user_input.polarity = -1;
+        }
+        else
+        {
+            user_input.voltage=vm["voltage"].as<double>();
+            user_input.polarity = 1;
+        }
     }
     else
     {
         throw invalid_argument("voltage not specified");
+    }
+
+    //override implied polarity if it is explicitly given
+    if (vm.count("polarity"))
+    {
+        if (vm["polarity"].as<int>() < 0)
+            user_input.polarity = -1;
+        else
+            user_input.polarity = 1;
+    }
+    else
+    {
+        cout<<"polarity not specified assuming "<<user_input.polarity<<endl;
     }
 
     if (vm.count("rate-limit"))
@@ -150,12 +176,22 @@ variable_package parse_cmd_parameters(int argc,char **argv,ofstream &pLogFile, s
 
     if(vm.count("number-of-bins"))
     {
-        user_input.numberOfBins=vm["number-of-bins"].as<int>();
+        user_input.numberOfBins=vm["number-of-bins"].as<unsigned int>();
     }
     else
     {
         user_input.numberOfBins=1000; //default value
     }
+
+    if(vm.count("margin"))
+    {
+        user_input.margin=vm["margin"].as<unsigned int>();
+    }
+    else
+    {
+        user_input.margin=1; //default value
+    }
+
 
     if (vm.count("chamber-file"))
     {
@@ -164,14 +200,12 @@ variable_package parse_cmd_parameters(int argc,char **argv,ofstream &pLogFile, s
             {
             throw invalid_argument("failed to open chamber file");
             }
-        chamber thisChamber(chamberFile);
-        user_input.electrodeArea=thisChamber.get_area(); //in mm2
-        user_input.E0=thisChamber.calc_E0(user_input.voltage); //in V/cm
-        user_input.binSize=thisChamber.calc_bin_size(user_input.numberOfBins);//in nm
-        //if Q is give, dose is set 0 and Q takes precedence
+        user_input.this_chamber = read_chamber_file(chamberFile,user_input.voltage,user_input.polarity,user_input.numberOfBins,user_input.margin);
+
+        //if Q is given, dose is set 0 and Q takes precedence
         if (user_input.dose > 0)
         {
-            user_input.Q=thisChamber.calc_charge_liberated(user_input.dose);//total liberated charge in pC
+            user_input.Q=user_input.this_chamber->calc_liberated_charge(user_input.dose); //total liberated charge in pC/mm^3
         }
     }
     else
@@ -181,11 +215,11 @@ variable_package parse_cmd_parameters(int argc,char **argv,ofstream &pLogFile, s
 
     if (vm["micro-pulsed"].as<bool>())
     {
-        user_input.this_beam = new elbe_micropulses(user_input.Q/(double)(numberOfPulses)/(double)(user_input.numberOfBins),user_input.pulseduration);
+        user_input.this_beam = new elbe_micropulses(user_input.Q/(double)(numberOfPulses)/user_input.this_chamber->volume,user_input.pulseduration);
     }
     else
     {
-        user_input.this_beam = new continuous_pulse(user_input.Q/user_input.pulseduration/(double)(user_input.numberOfBins),user_input.pulseduration);
+        user_input.this_beam = new continuous_pulse(user_input.Q/user_input.pulseduration/user_input.this_chamber->volume,user_input.pulseduration);
     }
 
     string errorString;
@@ -288,4 +322,68 @@ variable_package parse_cmd_parameters(int argc,char **argv,ofstream &pLogFile, s
 
     return user_input;
 }
+
+void output_parameters(variable_package &userInput, ostream &log, string startTime)
+{
+    //output start time and also write time to the log, if the log is something else than cout
+    cout<<"start time: "<<startTime<<endl<<endl;
+    if (userInput.logBuffer != cout.rdbuf())
+    {
+        log<<"start time: "<<startTime<<endl<<endl;
+    }
+
+    active_medium* fillgas = userInput.fillgas;
+
+    double E0 = userInput.this_chamber->return_average_E();
+
+    // output the settings to stdout
+    cout<<"beam settings: "<<endl;
+    cout<<"dose: "<<userInput.dose<<" mGy"
+        <<", pulse duration: "<<userInput.pulseduration<<" ns"
+        <<", total charge: "<<userInput.Q<<" pC"
+        <<", max rection rate: "<<userInput.rateLimit
+        <<", max velocity: "<<userInput.speedLimit
+        <<", bins: "<<userInput.numberOfBins<<endl;
+    userInput.this_beam->print_characeristics();
+    cout<<"chamber properties: "<<endl;
+    cout<<"voltage: "<<userInput.voltage<<" V"
+        <<", E0: "<<E0<<" V/cm"<<endl;
+    cout<<"binsize: "<<userInput.this_chamber->return_binLength()<<" nm"<<endl;
+    cout<<"first binvolume: "<<userInput.this_chamber->return_binVolume()[userInput.margin]<<" mm^3, last binVolume: "<<userInput.this_chamber->return_binVolume()[userInput.numberOfBins+userInput.margin-1]<<" mm^3"<<endl;
+    cout<<"active medium file: " << userInput.mediumName<<endl;
+    cout<<"values at E0="<<E0<<" V/cm:"<<endl;
+    cout<<"volume recombination: "<<fillgas->volume_recombination(E0)
+        <<", attachment rate: "<<fillgas->attachment(E0);
+    cout<<", mu von e: "<<fillgas->mobility_e(E0)
+        <<", mu von neg: "<<fillgas->mobility_neg(E0)
+        <<", mu von pos: "<<fillgas->mobility_pos(E0);
+    cout<<endl;
+    #if ELECTRONCOMBO == 1
+        cout<<"using direct recombination: "<<fillgas->direct_recombination(E0)<<" m^3/s"<<endl;
+        double beta=0;    //Rek. I+ e-
+    #else
+        cout<<"no direct recombination"<<endl;
+    #endif
+    cout<<endl;
+    cout<<"permittivity: "<<8.8542*fillgas->relative_permittivity(E0)<<endl;
+
+
+    //log the settings of the active medium
+    if (userInput.settingsLogFileName != "")
+    {
+        ofstream altOut(userInput.settingsLogFileName.c_str(), ios::out|ios::app);
+        if (!altOut)
+        {
+            cerr<<"failed to open settigns log: "<<userInput.settingsLogFileName.c_str()<<endl;
+        }
+        else{
+            fillgas->write_log(altOut);
+        }
+    }
+    else
+    {
+        log<<"no settings written"<<endl<<endl;
+    }
+}
+
 

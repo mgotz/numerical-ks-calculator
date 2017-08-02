@@ -1,0 +1,6 @@
+type: plane-parallel
+electrode-separation: 1.00 mm
+diameter: 5.0 mm
+Nw: 1.385e+09 Gy/C
+kQ: 1.0 Strahlqualität*Tiefenkorrektur
+

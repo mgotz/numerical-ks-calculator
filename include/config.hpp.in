@@ -1,0 +1,27 @@
+﻿#ifndef CONFIG
+#define CONFIG
+//defines some global preprocessor switches, which are configured by cmake (thus the strange values)
+//if cmake is not used, change their value to the desired one and rename file by removing the .in
+
+// logging levels are 0, 1 and 2
+// at 0 only the inital settings and the results are outputted
+// at 1 a status every 1000 steps is added
+// at 2 the calculation of the stepsize is logged at every iteration
+#define LOGLEVEL @LOGLEVEL@
+
+//turn off the recalculation of the electric field, i.e. deactivate shielding by charges (ON or OFF, default: OFF)
+#define CONSTFIELD @CONSTFIELD@
+
+//output files containing E-Field, electron and ion distributions, every 1000 steps (ON or OFF, default: OFF)
+#define CHARGETIMELINE @CHARGETIMELINE@
+
+//saves computations compared to just setting electron recombination coefficient=0 (ON or OFF, default: OFF)
+#define ELECTRONCOMBO @ELECTRONCOMBO@
+
+//set to ON if useing constant mobility, recombination or electron recombination respectively to speed up the calculation
+//ON or OFF, default: OFF for all
+#define CONSTIONMOB @CONSTIONMOB@
+#define CONSTRECOMB @CONSTRECOMB@
+#define CONSTELECTRONCOMBO @CONSTELECTRONCOMBO@
+
+#endif // CONFIG

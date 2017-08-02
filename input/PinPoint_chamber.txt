@@ -1,0 +1,6 @@
+Type: cylindrical 
+R1: 0.575 mm
+R2: 2.75 mm
+height: 5.5 mm
+Nw: 3.086e+08 Gy/C
+kQ: 1.0 Strahlqualität*Tiefenkorrektur

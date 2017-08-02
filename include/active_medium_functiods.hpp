@@ -1,9 +1,11 @@
 ﻿#ifndef ACTIVE_MEDIUM_FUNCTIODS
 #define ACTIVE_MEDIUM_FUNCTIODS
 /*
- There is one abstract base class the evaluation_functiod and several implementation
- Each instance of an implementation is a function with some parameters that are defined at construction, such that the function can then be evaluated
- at different value with the same parameters
+ * These classes provide simple containers for a few parameters defining a function (e.g., a simple line) and
+ * an evaluation method, implementing that function.
+ * After construction one can therefore call the function repeatedly using the same parameters.
+ * There is one abstract base class: the evaluation_functiod, which specifies an interface to call the evaluation method,
+ * independent of which specific implementation is used.
 */
 
 

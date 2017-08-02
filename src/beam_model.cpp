@@ -3,7 +3,7 @@
 #include <cmath>
 #include <iostream>
 
-#include "settings.hpp"
+#include "config.hpp"
 
 continuous_pulse::continuous_pulse(double pIonizationRate, double pPulseDuration) //give the charge created per ns and bin
 {
@@ -27,14 +27,14 @@ double continuous_pulse::ionization(double pTotalTime, double pTimeStep)
 
 void continuous_pulse::print_characeristics()
 {
-    std::cout << "continous pulse with charge creation rate/bin: " << mIonizationRate<<std::endl;
+    std::cout << "continous pulse with charge creation rate in pC/mm^3: " << mIonizationRate<<std::endl;
 }
 
 
 
-elbe_micropulses::elbe_micropulses (double pChargePerPulseAndBin, double pPulseDuration) //give the charge created per micro pulse and bin
+elbe_micropulses::elbe_micropulses (double pChargePerPulse, double pPulseDuration) //give the charge created per micro pulse in pC/mm^3
 {
-    mChargePerPulse = pChargePerPulseAndBin;
+    mChargePerPulse = pChargePerPulse;
     mPulseDuration = pPulseDuration;
 }
 
@@ -49,7 +49,7 @@ double elbe_micropulses::ionization(double pTotalTime, double pTimeStep){
         endTime = pTotalTime;
     }
     int pulsesInInterval = (int)std::ceil((endTime - 2.5e-3) / 77) - (int)std::ceil((startTime -2.5e-3) / 77);
-    #if DEBUGLEVEL > 0
+    #if LOGLEVEL > 0
         if (pulsesInInterval > 0){
             std::streamsize oldPrecision = std::cout.precision(16);
             std::cout<<pulsesInInterval<<" micropulses at "<<pTotalTime<<" ns"<<std::endl<<std::endl;
@@ -62,5 +62,5 @@ double elbe_micropulses::ionization(double pTotalTime, double pTimeStep){
 
 void elbe_micropulses::print_characeristics()
 {
-    std::cout << "micro-pulsed pulse with micro-pulse-charge/bin: " << mChargePerPulse<<std::endl;
+    std::cout << "micro-pulsed pulse with micro-pulse-charge in pC/mm^3: " << mChargePerPulse<<std::endl;
 }

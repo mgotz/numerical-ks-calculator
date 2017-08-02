@@ -1,32 +1,42 @@
 ; INI style File
 ;
-; comment line staring with ; are ignored
-; any ammount of blanc lines can be added
+; This file describes the properties of the active medium 
+; (volume recombination rate, ion mobilites, electron mobilities, electron attachment rate, 
+; electron-ion recombination rate, permittivity).
 ;
-; every properties has a section (in [])
-; in each section a function is defined (contant, line, exp, ploly4, poly5 or spline)
-; for a spline a file_name pointing to the location of a file containing the parameters of the spline should be given
-; the other function are defined by parameters: param0, param1 etc.
+; Comment lines starting with ; are ignored.
+; Any ammount of blank lines can be added.
 ;
-; expontential-function: [0]+[1]*exp([2]*x)
-; polynom 4. order: [0]+[1]*x+[2]*x*x..., expects 5 parameters ([0] [1] [2]...)
-; polynom 5. order: [0]+[1]*x+[2]*x*x..., expects 6 parameters ([0] [1] [2]...)
+; Every properties has a section (in []) naming the property.
+; In each section a function is defined (contant, line, exp, ploly4, poly5 or spline) in dependence of the electric field strength,
+; with the electric field strength given in V/cm.
+; For a spline a file_name pointing to the location of a file containing the parameters of the spline should be given
+; (relative paths are relative to the run directory).
+; The other functions are defined by parameters: param0, param1 etc.
+;
+; constant: 		 y = param0
+; line:     		 y = param0 + param1*x
+; expontential-function: y = param0 + param1*exp(param2*x)
+; polynom 4. order: 	 y = param0 + param1*x + param2*x*x..., expects 5 parameters (param0 param1 param2 ...)
+; polynom 5. order: 	 y = param0 + param1*x + param2*x*x..., expects 6 parameters (param0 param1 param2 ...)
 ; spline: The spline file contains 2 header lines and a body of 4 columns of tab-seperated values
-;	the tab seperated values are the coefficients of third order polynomials, each for a specific interval of electic field values
-;	the first header line: Number_of_splines: 18 Min_X_Spacing: 50
-;	informs about the number of lines in the table and the largest common denominator of the intervals 
-;	the second line: Knots: 50	200	400	etc.
-;	informs about the E-field intervals. It is a tab seperated list of values.
-;	the first polynomials is used for the interval 50-200, the second for 200-400 etc.
-;	see the given files for an example.
+;	The tab seperated values are the coefficients of third order polynomials, each for a specific interval of electric 
+;	field values.
+;	The first header line: Number_of_splines: 18 Min_X_Spacing: 50
+;	gives the number of lines in the table (i.e., polynomial intervals) and 
+;	the largest common denominator of those intervals .
+;	The second line: Knots: 50	200	400	etc.
+;	specifies the E-field intervals. It is a tab seperated list of values, denominating the boundaries of intervals.
+;	The first polynomial is used for the interval 50-200, the second for 200-400 etc.
+;	See the given files for an example.
 ;
-; order within one section and of the sections is irrelevant
+; Order within one section and of the sections is irrelevant.
 
 
 [volume_recombination]
 function = constant
 param0 = 1.29764892e-12
-;in m^3/s 1.24431194e-12
+;in m^3/s
 
 [positive_ion_mobility]
 function = constant
@@ -41,12 +51,14 @@ param0 = 2.09e-04
 [electron_mobility]
 function = spline
 file_name = ../input/magBoltz_30humidAir_electron_mobility_spline.txt
+;in m^2/Vs
 
 [electron_attachment_rate]
 function = spline
 file_name = ../input/reaction_rate_hoch_boiss_spline_extrapolated.txt
+;in 1/ns
 
 [direct_recombination]
 function = constant
 param0 =  4.45446331e-12
-;in m^3/Vs from fit to N2 data
+;in m^3/Vs

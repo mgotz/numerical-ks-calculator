@@ -3,7 +3,7 @@
 /*
 describe the beam, for now either a conitnuous rate over the entire pulse duration or a micropulse structure like at ELBE
 */
-#include "settings.hpp"
+#include "config.hpp"
 
 #include <string>
 
@@ -22,7 +22,7 @@ class continuous_pulse : public beam_model{
 public:
     virtual double ionization(double, double);
     virtual void print_characeristics();
-    continuous_pulse (double, double); //give the charge created per ns and bin and the pulse duration
+    continuous_pulse (double, double); //give the charge created per ns in pC/mm^3 and the pulse duration
 private:
     double mIonizationRate;
 };
@@ -32,7 +32,7 @@ class elbe_micropulses : public beam_model{
 public:
     virtual double ionization(double , double );
     virtual void print_characeristics();
-    elbe_micropulses (double, double); //give the charge created per micro pulse and bin and the pulse duration
+    elbe_micropulses (double, double); //give the charge created per micro pulse in pC/mm^3 and the pulse duration
 private:
     double mChargePerPulse;
 
