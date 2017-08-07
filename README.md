@@ -1,5 +1,5 @@
-# IC_Simulation
-Numeric solution of charge transport, creation and recombination inside a 1D ionization chamber model.
+# numerical-ks-calculator
+Numerical solution of charge transport, creation and recombination inside a 1D ionization chamber model.
 
 Building:
 Run cmake from a directory you want to build in and give a path to this directory as argument.
