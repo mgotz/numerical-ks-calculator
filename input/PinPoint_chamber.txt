@@ -1,4 +1,4 @@
-Type: cylindrical 
+Type: cylindrical
 R1: 0.575 mm
 R2: 2.75 mm
 height: 5.5 mm

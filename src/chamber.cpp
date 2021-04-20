@@ -15,7 +15,7 @@ string temp;
 string chamberType;
 chamber* thisChamber;
 double value0, value1, value2, value3, value4;
-chamberFile>>temp>>chamberType>>temp;
+chamberFile>>temp>>chamberType;
 if (chamberType == "cylindrical")
     {
     #if LOGLEVEL > 1
